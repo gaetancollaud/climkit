@@ -1,0 +1,38 @@
+[
+  {
+    "id": "61dfca85eba4e3564021f36d",
+    "type": "electricity",
+    "prim_ad": "10",
+    "virtual": false
+  },
+  {
+    "id": "61dfca85eba4e3564021f36f",
+    "type": "electricity",
+    "prim_ad": "101",
+    "virtual": false
+  },
+  {
+    "id": "61dfcb4beba4e3563fdf3d9f",
+    "type": "electricity",
+    "prim_ad": "11",
+    "virtual": false
+  },
+  {
+    "id": "61dfcb80eba4e3563fdf3da2",
+    "type": "electricity",
+    "prim_ad": "12",
+    "virtual": false
+  },
+  {
+    "id": "61dfcb8ceba4e3564021f374",
+    "type": "electricity",
+    "prim_ad": "13",
+    "virtual": false
+  },
+  {
+    "id": "61dfcb97eba4e3564021f377",
+    "type": "electricity",
+    "prim_ad": "14",
+    "virtual": false
+  }
+]

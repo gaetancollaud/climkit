@@ -1,0 +1,18 @@
+version: '3.0'
+services:
+  climkit-mqtt:
+    image: gaetancollaud/climkit-mqtt:dev
+    build: .
+    environment:
+      - MQTT_URL=tcp://mosquitto:1883
+      - MQTT_RETAIN=true
+    env_file:
+      - .env
+
+  mosquitto:
+    image: eclipse-mosquitto:1.5
+    volumes:
+      - ./docs/docker/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    ports:
+      - "1883:1883"
+      - "9001:9001"
