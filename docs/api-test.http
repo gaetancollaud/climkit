@@ -31,24 +31,42 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 
-### Meters timeseries
+### Meters timeseries (JSON)
 POST https://api.climkit.io/api/v1/site_data/61dfca84eba4e3564021f366/electricity
 Content-Type: application/json
 Accept: application/json
 Authorization: Bearer {{token}}
 
 {
-  "t_s": "2022-05-20T00:00:00Z"
+  "t_s": "2022-07-18 20:00:00"
 }
 
-
-### raw meter value
-POST https://api.climkit.io/api/v1/meter_data_raw/61dfca84eba4e3564021f366/61dfcb4beba4e3563fdf3d9f
+### meter value (for one meter)
+POST https://api.climkit.io/api/v1/meter_data/61dfca84eba4e3564021f366/61dfcb97eba4e3564021f377
 Content-Type: application/json
 Accept: application/json
 Authorization: Bearer {{token}}
 
 {
-  "t_s": "2022-05-20T15:00:00Z"
+  "t_s": "2022-07-17T12:00:00",
+  "t_e": "2022-07-17T13:00:00"
 }
+
+### raw meter value
+POST https://api.climkit.io/api/v1/meter_data_raw/61dfca84eba4e3564021f366/61dfcb97eba4e3564021f377
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer {{token}}
+
+{
+  "t_s": "2022-07-17T12:00:00",
+  "t_e": "2022-07-17T13:00:00"
+}
+
+### sensor list
+GET https://api.climkit.io/api/v1/61dfca84eba4e3564021f366/sensors_list
+Accept: application/json
+Authorization: Bearer {{token}}
+
+
 

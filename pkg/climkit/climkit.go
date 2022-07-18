@@ -3,6 +3,7 @@ package climkit
 import (
 	"encoding/json"
 	"github.com/rs/zerolog/log"
+	"time"
 )
 
 type Climkit struct {
@@ -34,6 +35,10 @@ func (c *Climkit) GetAll() error {
 		meters, err := c.api.getMetersInfos(installations[i])
 		metersStr, _ := json.Marshal(meters)
 		log.Info().RawJSON("meters", metersStr).Msg("got installation meters")
+
+		timeSeries, err := c.api.getMeterData(installations[i], meters, Electricity, time.Now().Add(-time.Minute*30))
+		timeSeriesStr, _ := json.Marshal(timeSeries)
+		log.Info().RawJSON("timeSeries", timeSeriesStr).Msg("got data")
 	}
 	return nil
 }
