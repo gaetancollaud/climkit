@@ -14,7 +14,7 @@ import (
 const ClimkitTimeFormat = "2006-01-02 15:04:05"
 
 type ClimkitAPI struct {
-	apiUrl     string
+	options    ClientOptions
 	httpClient *http.Client
 }
 
@@ -74,14 +74,14 @@ type TimeSeriesRequest struct {
 	StartTime string `json:"t_s"`
 }
 
-func NewApi(apiUrl string, username string, password string) *ClimkitAPI {
-	interceptor := NewInterceptor(apiUrl, username, password)
+func NewApi(options *ClientOptions) *ClimkitAPI {
+	interceptor := NewInterceptor(options)
 
 	return &ClimkitAPI{
 		httpClient: &http.Client{
 			Transport: interceptor,
 		},
-		apiUrl: apiUrl,
+		options: *options,
 	}
 }
 
@@ -182,7 +182,7 @@ func parseTimeAndLogError(input interface{}) time.Time {
 
 func (c *ClimkitAPI) get(methodName string, path string, returnObject any) error {
 	log.Info().Str("methodName", methodName).Msg("Get request")
-	resp, err := c.httpClient.Get(c.apiUrl + path)
+	resp, err := c.httpClient.Get(c.options.ApiUrl + path)
 	return c.handleHttpResponse(methodName, resp, err, returnObject)
 }
 
@@ -192,7 +192,7 @@ func (c *ClimkitAPI) getHistory(methodName string, path string, request TimeSeri
 	if err != nil {
 		return fmt.Errorf("cannot serialize request %s: %w", methodName, err)
 	}
-	resp, err := c.httpClient.Post(c.apiUrl+path, "application/json", bytes.NewBuffer(jsonRequest))
+	resp, err := c.httpClient.Post(c.options.ApiUrl+path, "application/json", bytes.NewBuffer(jsonRequest))
 	return c.handleHttpResponse(methodName, resp, err, returnObject)
 }
 

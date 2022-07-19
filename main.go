@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/gaetancollaud/climkit-to-mqtt/pkg/climkit"
 	"github.com/gaetancollaud/climkit-to-mqtt/pkg/config"
+	"github.com/gaetancollaud/climkit-to-mqtt/pkg/controller"
 	"os"
 	"os/signal"
 	"syscall"
@@ -36,22 +36,18 @@ func main() {
 
 	log.Info().Msg("Starting climkit to MQTT!")
 
-	climkit := climkit.New(config.Climkit.ApiUrl, config.Climkit.Username, config.Climkit.Password)
-
-	err = climkit.GetAll()
-	if err != nil {
-		log.Err(err).Msg("Unable to get installations")
+	controller := controller.NewController(config)
+	if err := controller.Start(); err != nil {
+		log.Fatal().Err(err).Msg("Error on starting the controller")
 	}
 
-	//mqtt := climkit_mqtt.New(config, ds)
-
-	//mqtt.Start()
-
 	// Subscribe for interruption happening during execution.
-	exitSignal := make(chan os.Signal)
+	exitSignal := make(chan os.Signal, 2)
 	signal.Notify(exitSignal, os.Interrupt, syscall.SIGTERM)
 	<-exitSignal
 
-	// Graceful stop the connections.
-	//mqtt.Stop()
+	// Gracefulle stop all the modules loops and logic.
+	if err := controller.Stop(); err != nil {
+		log.Fatal().Err(err).Msg("Error when stopping the controller")
+	}
 }

@@ -13,9 +13,7 @@ import (
 
 type Interceptor struct {
 	core        http.RoundTripper
-	apiUrl      string
-	username    string
-	password    string
+	options     ClientOptions
 	accessToken string
 	validUntil  time.Time
 }
@@ -33,15 +31,13 @@ type AuthResponse struct {
 }
 
 func NewInterceptor(
-	apiUrl string, username string, password string) *Interceptor {
+	options *ClientOptions) *Interceptor {
 	return &Interceptor{
 		core: &http.Transport{
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: true,
 			}},
-		apiUrl:      apiUrl,
-		username:    username,
-		password:    password,
+		options:     *options,
 		accessToken: "",
 		validUntil:  time.Now().Add(-time.Hour),
 	}
@@ -52,11 +48,11 @@ func (i Interceptor) refreshTokenIfNecessary() (string, error) {
 		log.Info().Msg("Token is expired, renewing")
 
 		requestBody := AuthRequest{
-			Username: i.username,
-			Password: i.password,
+			Username: i.options.Username,
+			Password: i.options.Password,
 		}
 		jsonRequest, _ := json.Marshal(requestBody)
-		response, err := http.Post(i.apiUrl+"v1/auth", "application/json", bytes.NewBuffer(jsonRequest))
+		response, err := http.Post(i.options.ApiUrl+"v1/auth", "application/json", bytes.NewBuffer(jsonRequest))
 		if err != nil {
 			return "", fmt.Errorf("unable to get accessToken: %w", err)
 		}

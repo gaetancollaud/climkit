@@ -7,12 +7,14 @@ import (
 )
 
 type Climkit struct {
-	api *ClimkitAPI
+	api     *ClimkitAPI
+	options ClientOptions
 }
 
-func New(apiUrl string, username string, password string) *Climkit {
-	return &Climkit{
-		api: NewApi(apiUrl, username, password),
+func New(options *ClientOptions) Climkit {
+	return Climkit{
+		options: *options,
+		api:     NewApi(options),
 	}
 }
 

@@ -20,19 +20,19 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 ### Site info
-GET https://api.climkit.io/api/v1/installation_infos/61dfca84eba4e3564021f366
+GET https://api.climkit.io/api/v1/installation_infos/{{installationId}}
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 
 ### Meters info
-GET https://api.climkit.io/api/v1/meter_info/61dfca84eba4e3564021f366
+GET https://api.climkit.io/api/v1/meter_info/{{installationId}}
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 
 ### Meters timeseries (JSON)
-POST https://api.climkit.io/api/v1/site_data/61dfca84eba4e3564021f366/electricity
+POST https://api.climkit.io/api/v1/site_data/{{installationId}}/electricity
 Content-Type: application/json
 Accept: application/json
 Authorization: Bearer {{token}}
@@ -42,7 +42,7 @@ Authorization: Bearer {{token}}
 }
 
 ### meter value (for one meter)
-POST https://api.climkit.io/api/v1/meter_data/61dfca84eba4e3564021f366/61dfcb97eba4e3564021f377
+POST https://api.climkit.io/api/v1/meter_data/{{installationId}}/{{oneMeterId}}
 Content-Type: application/json
 Accept: application/json
 Authorization: Bearer {{token}}
@@ -53,7 +53,7 @@ Authorization: Bearer {{token}}
 }
 
 ### raw meter value
-POST https://api.climkit.io/api/v1/meter_data_raw/61dfca84eba4e3564021f366/61dfcb97eba4e3564021f377
+POST https://api.climkit.io/api/v1/meter_data_raw/{{installationId}}/{{oneMeterId}}
 Content-Type: application/json
 Accept: application/json
 Authorization: Bearer {{token}}
@@ -64,7 +64,7 @@ Authorization: Bearer {{token}}
 }
 
 ### sensor list
-GET https://api.climkit.io/api/v1/61dfca84eba4e3564021f366/sensors_list
+GET https://api.climkit.io/api/v1/{{installationId}}/sensors_list
 Accept: application/json
 Authorization: Bearer {{token}}
 
