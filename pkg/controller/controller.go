@@ -10,7 +10,7 @@ import (
 )
 
 type Controller struct {
-	climkit    climkit.Climkit
+	climkit    climkit.Client
 	mqttClient mqtt.Client
 
 	modules map[string]modules.Module
@@ -23,7 +23,7 @@ func NewController(config *config.Config) *Controller {
 		SetUsername(config.Climkit.Username).
 		SetPassword(config.Climkit.Password)
 
-	climkit := climkit.New(climkitOption)
+	climkit := climkit.NewClient(climkitOption)
 
 	mqttOptions := mqtt.NewClientOptions().
 		SetMqttUrl(config.Mqtt.MqttUrl).

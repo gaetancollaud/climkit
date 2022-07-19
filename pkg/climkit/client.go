@@ -13,7 +13,7 @@ import (
 
 const ClimkitTimeFormat = "2006-01-02 15:04:05"
 
-type ClimkitAPI struct {
+type Client struct {
 	options    ClientOptions
 	httpClient *http.Client
 }
@@ -74,10 +74,10 @@ type TimeSeriesRequest struct {
 	StartTime string `json:"t_s"`
 }
 
-func NewApi(options *ClientOptions) *ClimkitAPI {
+func NewClient(options *ClientOptions) Client {
 	interceptor := NewInterceptor(options)
 
-	return &ClimkitAPI{
+	return Client{
 		httpClient: &http.Client{
 			Transport: interceptor,
 		},
@@ -85,25 +85,25 @@ func NewApi(options *ClientOptions) *ClimkitAPI {
 	}
 }
 
-func (c *ClimkitAPI) GetInstallations() ([]string, error) {
+func (c *Client) GetInstallations() ([]string, error) {
 	var obj []string
 	err := c.get("installations", "v1/all_installations", &obj)
 	return obj, err
 }
 
-func (c *ClimkitAPI) getInstallationInfo(installationId string) (InstallationInfo, error) {
+func (c *Client) GetInstallationInfo(installationId string) (InstallationInfo, error) {
 	var obj InstallationInfo
 	err := c.get("installation info", "v1/installation_infos/"+installationId, &obj)
 	return obj, err
 }
 
-func (c *ClimkitAPI) getMetersInfos(installationId string) ([]MeterInfo, error) {
+func (c *Client) GetMetersInfos(installationId string) ([]MeterInfo, error) {
 	var obj []MeterInfo
 	err := c.get("meters info", "v1/meter_info/"+installationId, &obj)
 	return obj, err
 }
 
-func (c *ClimkitAPI) getMeterData(installationId string, meters []MeterInfo, meterType MeterType, startTime time.Time) ([]MeterData, error) {
+func (c *Client) GetMeterData(installationId string, meters []MeterInfo, meterType MeterType, startTime time.Time) ([]MeterData, error) {
 	var obj []interface{}
 
 	// implicit UTC
@@ -180,13 +180,13 @@ func parseTimeAndLogError(input interface{}) time.Time {
 	return parsed
 }
 
-func (c *ClimkitAPI) get(methodName string, path string, returnObject any) error {
+func (c *Client) get(methodName string, path string, returnObject any) error {
 	log.Info().Str("methodName", methodName).Msg("Get request")
 	resp, err := c.httpClient.Get(c.options.ApiUrl + path)
 	return c.handleHttpResponse(methodName, resp, err, returnObject)
 }
 
-func (c *ClimkitAPI) getHistory(methodName string, path string, request TimeSeriesRequest, returnObject any) error {
+func (c *Client) getHistory(methodName string, path string, request TimeSeriesRequest, returnObject any) error {
 	jsonRequest, err := json.Marshal(request)
 	log.Info().Str("methodName", methodName).Str("request", string(jsonRequest)).Msg("Get history")
 	if err != nil {
@@ -196,7 +196,7 @@ func (c *ClimkitAPI) getHistory(methodName string, path string, request TimeSeri
 	return c.handleHttpResponse(methodName, resp, err, returnObject)
 }
 
-func (c *ClimkitAPI) handleHttpResponse(methodName string, resp *http.Response, err error, returnObject any) error {
+func (c *Client) handleHttpResponse(methodName string, resp *http.Response, err error, returnObject any) error {
 	if err != nil {
 		return fmt.Errorf("unable to get %s: %w", methodName, err)
 	}

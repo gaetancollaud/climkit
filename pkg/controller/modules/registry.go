@@ -12,7 +12,7 @@ type Module interface {
 	Stop() error
 }
 
-type ModuleBuilder func(mqtt.Client, climkit.Climkit, *config.Config) Module
+type ModuleBuilder func(mqtt.Client, climkit.Client, *config.Config) Module
 
 // Register stores a builder function into the registy for external access.
 // Register() can be called from init() on a module in this package and will

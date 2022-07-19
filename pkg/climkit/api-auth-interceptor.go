@@ -25,8 +25,8 @@ type AuthRequest struct {
 
 type AuthResponse struct {
 	AccessToken string `json:"access_token"`
-	validUntil  struct {
-		date int64 `json:"$date"`
+	ValidUntil  struct {
+		Date int64 `json:"$date"`
 	} `json:"valid_until"`
 }
 
@@ -43,7 +43,7 @@ func NewInterceptor(
 	}
 }
 
-func (i Interceptor) refreshTokenIfNecessary() (string, error) {
+func (i *Interceptor) refreshTokenIfNecessary() (string, error) {
 	if time.Now().Add(-10 * time.Second).After(i.validUntil) {
 		log.Info().Msg("Token is expired, renewing")
 
@@ -66,15 +66,14 @@ func (i Interceptor) refreshTokenIfNecessary() (string, error) {
 		json.Unmarshal(body, &jsonResponse)
 
 		i.accessToken = jsonResponse.AccessToken
-		i.validUntil = time.Unix(jsonResponse.validUntil.date, 0)
+		i.validUntil = time.UnixMilli(jsonResponse.ValidUntil.Date)
 
 		log.Debug().Str("access_token", i.accessToken).Time("valid_until", i.validUntil).Msg("Token received")
-
 	}
 	return i.accessToken, nil
 }
 
-func (i Interceptor) modifyRequest(r *http.Request) *http.Request {
+func (i *Interceptor) modifyRequest(r *http.Request) *http.Request {
 	token, err := i.refreshTokenIfNecessary()
 	if err != nil {
 		log.Err(err).Msg("Unable to get accessToken ")
@@ -84,7 +83,7 @@ func (i Interceptor) modifyRequest(r *http.Request) *http.Request {
 	return r
 }
 
-func (i Interceptor) RoundTrip(r *http.Request) (*http.Response, error) {
+func (i *Interceptor) RoundTrip(r *http.Request) (*http.Response, error) {
 	defer func() {
 		if r.Body != nil {
 			_ = r.Body.Close()
