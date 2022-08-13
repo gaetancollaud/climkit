@@ -89,7 +89,7 @@ func NewClient(options *ClientOptions) Client {
 	}
 }
 
-func (c *Client) GetInstallations() ([]string, error) {
+func (c *Client) GetInstallationIds() ([]string, error) {
 	var obj []string
 	err := c.get("installations", "v1/all_installations", &obj)
 	return obj, err
