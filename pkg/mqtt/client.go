@@ -2,6 +2,7 @@ package mqtt
 
 import (
 	"fmt"
+	"github.com/rs/zerolog"
 	"path"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -39,9 +40,11 @@ type Client interface {
 type client struct {
 	mqttClient mqtt.Client
 	options    ClientOptions
+	log        zerolog.Logger
 }
 
 func NewClient(options *ClientOptions) Client {
+	logger := log.With().Str("Component", "MQTT").Logger()
 	mqttOptions := mqtt.NewClientOptions().
 		AddBroker(options.MqttUrl).
 		SetClientID("climkit-to-mqtt-" + uuid.New().String()).
@@ -52,6 +55,7 @@ func NewClient(options *ClientOptions) Client {
 	return &client{
 		mqttClient: mqtt.NewClient(mqttOptions),
 		options:    *options,
+		log:        logger,
 	}
 }
 
@@ -69,12 +73,12 @@ func (c *client) Connect() error {
 }
 
 func (c *client) Disconnect() error {
-	log.Info().Msg("Publishing Offline status to MQTT server.")
+	c.log.Info().Msg("Publishing Offline status to MQTT server.")
 	if err := c.publishServerStatus(Offline); err != nil {
 		return err
 	}
 	c.mqttClient.Disconnect(uint(c.options.DisconnectTimeout.Milliseconds()))
-	log.Info().Msg("Disconnected from MQTT server.")
+	c.log.Info().Msg("Disconnected from MQTT server.")
 	return nil
 }
 
@@ -90,7 +94,7 @@ func (c *client) Publish(topic string, message interface{}) error {
 
 // Publish the current binary status into the MQTT topic.
 func (c *client) publishServerStatus(message string) error {
-	log.Info().Str("status", message).Str("topic", serverStatus).Msg("Updating server status topic")
+	c.log.Info().Str("status", message).Str("topic", serverStatus).Msg("Updating server status topic")
 	return c.Publish(serverStatus, message)
 }
 

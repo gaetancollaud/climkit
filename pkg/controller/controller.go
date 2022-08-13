@@ -6,17 +6,20 @@ import (
 	"github.com/gaetancollaud/climkit-to-mqtt/pkg/config"
 	"github.com/gaetancollaud/climkit-to-mqtt/pkg/controller/modules"
 	"github.com/gaetancollaud/climkit-to-mqtt/pkg/mqtt"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
 type Controller struct {
 	climkit    climkit.Client
 	mqttClient mqtt.Client
+	log        zerolog.Logger
 
 	modules map[string]modules.Module
 }
 
 func NewController(config *config.Config) *Controller {
+	logger := log.With().Str("Component", "Controller").Logger()
 	// Create climkit client
 	climkitOption := climkit.NewClientOptions().
 		SetApiUrl(config.Climkit.ApiUrl).
@@ -36,6 +39,7 @@ func NewController(config *config.Config) *Controller {
 	controller := Controller{
 		climkit:    climkit,
 		mqttClient: mqttClient,
+		log:        logger,
 		modules:    map[string]modules.Module{},
 	}
 
@@ -48,7 +52,7 @@ func NewController(config *config.Config) *Controller {
 }
 
 func (c *Controller) Start() error {
-	log.Info().Msg("Starting controller.")
+	c.log.Info().Msg("Starting.")
 	if err := c.mqttClient.Connect(); err != nil {
 		return fmt.Errorf("error connecting to MQTT client: %w", err)
 	}
@@ -57,7 +61,7 @@ func (c *Controller) Start() error {
 	//}
 
 	for name, module := range c.modules {
-		log.Info().Str("module", name).Msg("Starting module.")
+		c.log.Info().Str("module", name).Msg("Starting module.")
 		if err := module.Start(); err != nil {
 			return fmt.Errorf("error starting module '%s': %w", name, err)
 		}
@@ -67,10 +71,10 @@ func (c *Controller) Start() error {
 }
 
 func (c *Controller) Stop() error {
-	log.Info().Msg("Stopping controller.")
+	c.log.Info().Msg("Stopping.")
 
 	for name, module := range c.modules {
-		log.Info().Str("module", name).Msg("Stopping module.")
+		c.log.Info().Str("module", name).Msg("Stopping module.")
 		if err := module.Stop(); err != nil {
 			return fmt.Errorf("error stopping module '%s': %w", name, err)
 		}

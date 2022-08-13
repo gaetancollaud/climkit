@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"io/ioutil"
 	"net/http"
@@ -16,6 +17,7 @@ const ClimkitTimeFormat = "2006-01-02 15:04:05"
 type Client struct {
 	options    ClientOptions
 	httpClient *http.Client
+	log        zerolog.Logger
 }
 
 type InstallationInfo struct {
@@ -75,13 +77,15 @@ type TimeSeriesRequest struct {
 }
 
 func NewClient(options *ClientOptions) Client {
-	interceptor := NewInterceptor(options)
+	logger := log.With().Str("Component", "Climkit").Logger()
+	interceptor := NewInterceptor(logger, options)
 
 	return Client{
 		httpClient: &http.Client{
 			Transport: interceptor,
 		},
 		options: *options,
+		log:     logger,
 	}
 }
 
@@ -181,14 +185,14 @@ func parseTimeAndLogError(input interface{}) time.Time {
 }
 
 func (c *Client) get(methodName string, path string, returnObject any) error {
-	log.Info().Str("methodName", methodName).Msg("Get request")
+	c.log.Info().Str("methodName", methodName).Msg("Get request")
 	resp, err := c.httpClient.Get(c.options.ApiUrl + path)
 	return c.handleHttpResponse(methodName, resp, err, returnObject)
 }
 
 func (c *Client) getHistory(methodName string, path string, request TimeSeriesRequest, returnObject any) error {
 	jsonRequest, err := json.Marshal(request)
-	log.Info().Str("methodName", methodName).Str("request", string(jsonRequest)).Msg("Get history")
+	c.log.Info().Str("methodName", methodName).Str("request", string(jsonRequest)).Msg("Get history")
 	if err != nil {
 		return fmt.Errorf("cannot serialize request %s: %w", methodName, err)
 	}

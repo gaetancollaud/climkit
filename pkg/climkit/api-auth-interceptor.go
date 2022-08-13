@@ -5,7 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -16,6 +16,7 @@ type Interceptor struct {
 	options     ClientOptions
 	accessToken string
 	validUntil  time.Time
+	log         zerolog.Logger
 }
 
 type AuthRequest struct {
@@ -30,8 +31,7 @@ type AuthResponse struct {
 	} `json:"valid_until"`
 }
 
-func NewInterceptor(
-	options *ClientOptions) *Interceptor {
+func NewInterceptor(logger zerolog.Logger, options *ClientOptions) *Interceptor {
 	return &Interceptor{
 		core: &http.Transport{
 			TLSClientConfig: &tls.Config{
@@ -40,12 +40,13 @@ func NewInterceptor(
 		options:     *options,
 		accessToken: "",
 		validUntil:  time.Now().Add(-time.Hour),
+		log:         logger,
 	}
 }
 
 func (i *Interceptor) refreshTokenIfNecessary() (string, error) {
 	if time.Now().Add(-10 * time.Second).After(i.validUntil) {
-		log.Info().Msg("Token is expired, renewing")
+		i.log.Info().Msg("Token is expired, renewing")
 
 		requestBody := AuthRequest{
 			Username: i.options.Username,
@@ -68,7 +69,7 @@ func (i *Interceptor) refreshTokenIfNecessary() (string, error) {
 		i.accessToken = jsonResponse.AccessToken
 		i.validUntil = time.UnixMilli(jsonResponse.ValidUntil.Date)
 
-		log.Debug().Str("access_token", i.accessToken).Time("valid_until", i.validUntil).Msg("Token received")
+		i.log.Debug().Str("access_token", i.accessToken).Time("valid_until", i.validUntil).Msg("Token received")
 	}
 	return i.accessToken, nil
 }
@@ -76,9 +77,9 @@ func (i *Interceptor) refreshTokenIfNecessary() (string, error) {
 func (i *Interceptor) modifyRequest(r *http.Request) *http.Request {
 	token, err := i.refreshTokenIfNecessary()
 	if err != nil {
-		log.Err(err).Msg("Unable to get accessToken ")
+		i.log.Err(err).Msg("Unable to get accessToken ")
 	}
-	log.Trace().Str("token", token).Msg("Injecting accessToken")
+	i.log.Trace().Str("token", token).Msg("Injecting accessToken")
 	r.Header.Set("Authorization", "Bearer "+token)
 	return r
 }

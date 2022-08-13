@@ -42,14 +42,14 @@ Authorization: Bearer {{token}}
 }
 
 ### meter value (for one meter)
-POST https://api.climkit.io/api/v1/meter_data/{{installationId}}/{{oneMeterId}}
+POST https://api.climkit.io/api/v1/meter_data/{{installationId}}/{{noAccessMeterId}}
 Content-Type: application/json
 Accept: application/json
 Authorization: Bearer {{token}}
 
 {
-  "t_s": "2022-07-17T12:00:00",
-  "t_e": "2022-07-17T13:00:00"
+  "t_s": "2022-07-27T12:00:00",
+  "t_e": "2022-07-27T13:00:00"
 }
 
 ### raw meter value
@@ -59,8 +59,7 @@ Accept: application/json
 Authorization: Bearer {{token}}
 
 {
-  "t_s": "2022-07-17T12:00:00",
-  "t_e": "2022-07-17T13:00:00"
+  "t_s": "2022-07-27T17:00:00"
 }
 
 ### sensor list
