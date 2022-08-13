@@ -2,7 +2,9 @@ package config
 
 import (
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+	"strings"
 )
 
 type ConfigClimkit struct {
@@ -56,6 +58,7 @@ func ReadConfig() (*Config, error) {
 	// Set the current directory where the binary is being run.
 	viper.AddConfigPath(".")
 	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	for key, value := range defaultConfig {
 		if value != undefined {
 			viper.SetDefault(key, value)
@@ -64,7 +67,12 @@ func ReadConfig() (*Config, error) {
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		return nil, fmt.Errorf("ReadInConfig error: %w", err)
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			// Config file not found; ignore error if desired
+			log.Info().Msg("No config file found, using default and environment variable")
+		} else {
+			return nil, fmt.Errorf("ReadInConfig error: %w", err)
+		}
 	}
 
 	// Check for deprecated and undefined fields.

@@ -1,11 +1,10 @@
 version: '3.0'
 services:
-  climkit-mqtt:
-    image: gaetancollaud/climkit-mqtt:dev
+  climkit-to-mqtt:
+    image: gaetancollaud/climkit-to-mqtt:dev
     build: .
     environment:
       - MQTT_URL=tcp://mosquitto:1883
-      - MQTT_RETAIN=true
     env_file:
       - .env
 

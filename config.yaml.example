@@ -1,0 +1,8 @@
+climkit:
+  username: cktDevUser_123
+  password: 123
+
+mqtt:
+  url: tcp://mqtt:1883
+#  username: abc
+#  password: abc

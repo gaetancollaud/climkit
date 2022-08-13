@@ -64,7 +64,7 @@ func (c *client) Connect() error {
 	t := c.mqttClient.Connect()
 	<-t.Done()
 	if t.Error() != nil {
-		return fmt.Errorf("error connecting to MQTT broker: %w", t.Error())
+		return fmt.Errorf("error connecting to MQTT broker '%s': %w", c.options.MqttUrl, t.Error())
 	}
 
 	if err := c.publishServerStatus(Online); err != nil {
