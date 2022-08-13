@@ -28,6 +28,7 @@ type Client interface {
 
 	// Publishes a message under the prefix topic of DigitalStrom.
 	Publish(topic string, message interface{}) error
+	PublishAndLogError(topic string, message interface{})
 
 	// Return the full topic for a given subpath.
 	GetFullTopic(topic string) string
@@ -90,6 +91,13 @@ func (c *client) Publish(topic string, message interface{}) error {
 		message)
 	<-t.Done()
 	return t.Error()
+}
+
+func (c *client) PublishAndLogError(topic string, message interface{}) {
+	err := c.Publish(topic, message)
+	if err != nil {
+		c.log.Error().Str("topic", topic).Err(err).Msg("Cannot publish")
+	}
 }
 
 // Publish the current binary status into the MQTT topic.
