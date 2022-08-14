@@ -5,17 +5,10 @@ MIGRATIONS :=  $(wildcard ${MIGRATIONDIR}/*.sql)
 TOOLS := ${GOPATH}/bin/go-bindata
 
 # This is all the tools required to compile, test and handle protobufs
-tools: ${TOOLS}
-
-${GOPATH}/bin/go-bindata:
-	GO111MODULE=off go get -u github.com/go-bindata/go-bindata/...
-
-${MIGRATIONDIR}/bindata.go: ${MIGRATIONS}
-	# Building bindata
-	go-bindata -o ${MIGRATIONDIR}/bindata.go -prefix ${MIGRATIONDIR} -pkg migrations ${MIGRATIONDIR}/*.sql
+#tools: ${TOOLS}
 
 # Build all files.
-build:
+build: ${MIGRATIONDIR}/bindata.go
 	@echo "==> Building ./dist/sdm"
 	env GOOS=linux GOARCH=amd64 go build -o dist/climkit-to-mqtt-amd64 ./main.go
 .PHONY: build
@@ -24,6 +17,14 @@ build-arm:
 	@echo "==> Building ./dist/sdm"
 	env GOOS=linux GOARCH=arm GOARM=5 go build -o dist/climkit-to-mqtt-arm ./main.go
 .PHONY: build
+
+
+${GOPATH}/bin/go-bindata:
+	GO111MODULE=off go get -u github.com/go-bindata/go-bindata/...
+
+${MIGRATIONDIR}/bindata.go: ${MIGRATIONS}
+	# Building bindata
+	go-bindata -o ${MIGRATIONDIR}/bindata.go -prefix ${MIGRATIONDIR} -pkg migrations ${MIGRATIONDIR}/*.sql
 
 # Install from source.
 install:
