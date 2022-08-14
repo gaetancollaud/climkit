@@ -72,11 +72,11 @@ var defaultConfig = map[string]interface{}{
 	envKeyMqttTopicPrefix:  "climkit",
 	envKeyMqttRetain:       false,
 	envKeyLogLevel:         "INFO",
-	envKeyPostgresHost:     "",
-	envKeyPostgresPort:     "",
-	envKeyPostgresDatabase: "",
-	envKeyPostgresUsername: "",
-	envKeyPostgresPassword: "",
+	envKeyPostgresHost:     "localhost",
+	envKeyPostgresPort:     "5432",
+	envKeyPostgresDatabase: "postgres",
+	envKeyPostgresUsername: "postgres",
+	envKeyPostgresPassword: "postgres",
 }
 
 // FromEnv returns a Config from env variables

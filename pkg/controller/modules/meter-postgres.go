@@ -6,6 +6,7 @@ import (
 	"github.com/gaetancollaud/climkit-to-mqtt/pkg/config"
 	"github.com/gaetancollaud/climkit-to-mqtt/pkg/mqtt"
 	"github.com/gaetancollaud/climkit-to-mqtt/pkg/postgres"
+	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"time"
@@ -34,24 +35,24 @@ func (mm *MeterPostgresModule) Eligible() bool {
 }
 
 func (mm *MeterPostgresModule) Start() error {
-	mm.fetchAndPublishInstallationInformation()
-	mm.fetchAndPublishMeterValue()
-
-	ticker := time.NewTicker(15 * time.Minute)
-	mm.timerQuitChannel = make(chan struct{})
-
-	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				mm.fetchAndPublishMeterValue()
-			case <-mm.timerQuitChannel:
-				mm.log.Info().Msg("Stopping interval requests")
-				ticker.Stop()
-				return
-			}
-		}
-	}()
+	//mm.fetchAndPublishInstallationInformation()
+	//mm.fetchAndPublishMeterValue()
+	//
+	//ticker := time.NewTicker(15 * time.Minute)
+	//mm.timerQuitChannel = make(chan struct{})
+	//
+	//go func() {
+	//	for {
+	//		select {
+	//		case <-ticker.C:
+	//			mm.fetchAndPublishMeterValue()
+	//		case <-mm.timerQuitChannel:
+	//			mm.log.Info().Msg("Stopping interval requests")
+	//			ticker.Stop()
+	//			return
+	//		}
+	//	}
+	//}()
 	return nil
 }
 

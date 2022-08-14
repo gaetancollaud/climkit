@@ -79,6 +79,9 @@ func (c *Controller) Start() error {
 		if err := c.postgresClient.Connect(); err != nil {
 			return fmt.Errorf("error connecting to Postgres client: %w", err)
 		}
+		if err := c.postgresClient.Migrate(); err != nil {
+			return fmt.Errorf("unable to migrate database: %w", err)
+		}
 	}
 
 	for name, module := range c.modules {

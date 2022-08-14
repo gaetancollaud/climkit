@@ -1,0 +1,13 @@
+{
+  "name": "main",
+  "configurations": [
+    {
+      "type": "go",
+      "name": "climkit-scrapper",
+      "mode": "debug",
+      "goExecPath": "/usr/local/go/bin/go",
+      "params": [],
+      "buildTargets": "main.go"
+    }
+  ]
+}
