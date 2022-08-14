@@ -91,6 +91,7 @@ func (c *client) Migrate() error {
 	if err != nil {
 		return err
 	}
+	m.Down()
 	err = m.Up()
 	if err != nil {
 		return err
