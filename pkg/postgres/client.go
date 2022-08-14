@@ -74,7 +74,6 @@ func (c *client) Execute(query string) error {
 }
 
 func (c *client) Migrate() error {
-
 	s := bindata.Resource(migrations.AssetNames(),
 		func(name string) ([]byte, error) {
 			return migrations.Asset(name)
