@@ -83,16 +83,16 @@ func (mm *MeterPostgresModule) fetchAndUpdateInstallationInformation() {
 		mm.log.Info().RawJSON("info", infoStr).Msg("got installation info")
 		mm.updateInstallation(installationId, info)
 
-		//meters, err := mm.climkit.GetMetersInfos(installationIds[i])
-		//metersStr, _ := json.Marshal(meters)
-		//mm.log.Info().RawJSON("meters", metersStr).Msg("got installation meters")
-		//
-		//for j := range meters {
-		//	meterInfo := meters[j]
-		//	mm.updateMeterInfo(installationId, meterInfo)
-		//}
-		//
-		//mm.installations[installationId] = meters
+		meters, err := mm.climkit.GetMetersInfos(installationIds[i])
+		metersStr, _ := json.Marshal(meters)
+		mm.log.Info().RawJSON("meters", metersStr).Msg("got installation meters")
+
+		for j := range meters {
+			meterInfo := meters[j]
+			mm.updateMeterInfo(installationId, meterInfo)
+		}
+
+		mm.installations[installationId] = meters
 	}
 }
 
@@ -117,20 +117,19 @@ func (mm *MeterPostgresModule) updateInstallation(installationId string, install
 
 	err := mm.postgresClient.Execute(query, installationId, installation.SiteRef, installation.Name, installation.Timezone, installation.CreationDate, installation.Latitude, installation.Longitude)
 	if err != nil {
-		mm.log.Fatal().Err(err).Msg("Unable to update installation")
+		mm.log.Fatal().Err(err).Str("installationId", installationId).Msg("Unable to update installation")
 	}
-	//mm.mqttClient.PublishAndLogError("installation/"+installationId+"/name", installation.Name)
-	//mm.mqttClient.PublishAndLogError("installation/"+installationId+"/site_ref", installation.SiteRef)
-	//mm.mqttClient.PublishAndLogError("installation/"+installationId+"/timezone", installation.Timezone)
-	//mm.mqttClient.PublishAndLogError("installation/"+installationId+"/creationDate", installation.CreationDate)
-	//mm.mqttClient.PublishAndLogError("installation/"+installationId+"/latitude", fmt.Sprintf("%f", installation.Latitude))
-	//mm.mqttClient.PublishAndLogError("installation/"+installationId+"/longitude", fmt.Sprintf("%f", installation.Longitude))
 }
 
 func (mm *MeterPostgresModule) updateMeterInfo(installationId string, meter climkit.MeterInfo) {
-	//mm.mqttClient.PublishAndLogError("installation/"+installationId+"/meters/"+meter.Id+"/type", meter.Type)
-	//mm.mqttClient.PublishAndLogError("installation/"+installationId+"/meters/"+meter.Id+"/prim_ad", fmt.Sprintf("%d", meter.PrimAd))
-	//mm.mqttClient.PublishAndLogError("installation/"+installationId+"/meters/"+meter.Id+"/virtual", fmt.Sprintf("%d", meter.PrimAd))
+	query := `INSERT INTO t_meters(meter_id, installation_id, meter_type, prim_ad, virtual)
+		VALUES($1, $2, $3, $4, $5)
+		ON CONFLICT (meter_id) DO UPDATE set installation_id=$2, meter_type=$3, prim_ad=$4, virtual=$5`
+
+	err := mm.postgresClient.Execute(query, meter.Id, installationId, meter.Type, meter.PrimAd, meter.Virtual)
+	if err != nil {
+		mm.log.Fatal().Err(err).Str("installationId", installationId).Str("MeterId", meter.Id).Msg("Unable to update meter")
+	}
 }
 
 func (mm *MeterPostgresModule) updateMetersLiveValue(installationId string, lastValues climkit.MeterData) {
