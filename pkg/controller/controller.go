@@ -47,8 +47,8 @@ func NewController(cfg *config.Config) *Controller {
 			SetHost(cfg.Postgres.Host).
 			SetPort(cfg.Postgres.Port).
 			SetDatabase(cfg.Postgres.Database).
-			SetUsername(cfg.Mqtt.Username).
-			SetPassword(cfg.Mqtt.Password)
+			SetUsername(cfg.Postgres.Username).
+			SetPassword(cfg.Postgres.Password)
 		postgresClient = postgres.NewClient(postgresOptions)
 	}
 

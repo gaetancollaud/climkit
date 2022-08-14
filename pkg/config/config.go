@@ -32,6 +32,7 @@ type ConfigPostgres struct {
 	Database string
 	Username string
 	Password string
+	SslMode  string
 }
 type Config struct {
 	Climkit  ConfigClimkit
@@ -59,6 +60,7 @@ const (
 	envKeyPostgresDatabase string = "postgres.database"
 	envKeyPostgresUsername string = "postgres.username"
 	envKeyPostgresPassword string = "postgres.password"
+	envKeyPostgresSslMode  string = "postgres.ssl-mode"
 )
 
 var defaultConfig = map[string]interface{}{
@@ -77,6 +79,7 @@ var defaultConfig = map[string]interface{}{
 	envKeyPostgresDatabase: "postgres",
 	envKeyPostgresUsername: "postgres",
 	envKeyPostgresPassword: "postgres",
+	envKeyPostgresSslMode:  "disable",
 }
 
 // FromEnv returns a Config from env variables
@@ -129,6 +132,7 @@ func ReadConfig() (*Config, error) {
 			Database: viper.GetString(envKeyPostgresDatabase),
 			Username: viper.GetString(envKeyPostgresUsername),
 			Password: viper.GetString(envKeyPostgresPassword),
+			SslMode:  viper.GetString(envKeyPostgresSslMode),
 		},
 		Mode:     Mode(viper.GetString(envKeyMode)),
 		LogLevel: viper.GetString(envKeyLogLevel),

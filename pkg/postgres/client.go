@@ -2,9 +2,13 @@ package postgres
 
 import (
 	"database/sql"
+	"fmt"
+	"github.com/gaetancollaud/climkit-to-mqtt/pkg/postgres/migrations"
 	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	postgresMigrate "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	bindata "github.com/golang-migrate/migrate/v4/source/go_bindata"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -35,12 +39,19 @@ func NewClient(options *ClientOptions) Client {
 	return &client{
 		options: *options,
 		log:     logger,
+		db:      nil,
 	}
 }
 
-func (c client) Connect() error {
+func (c *client) Connect() error {
 	c.log.Info().Str("host", c.options.Host).Int("port", c.options.Port).Str("database", c.options.Databse).Msg("Connecting to database")
-	connStr := "postgres://" + c.options.Username + ":" + c.options.Password + "@" + c.options.Host + ":" + strconv.Itoa(c.options.Port) + "/" + c.options.Databse + "?sslmode=enable"
+	connStr := "postgres://" + c.options.Username + ":" + c.options.Password + "@" + c.options.Host + ":" + strconv.Itoa(c.options.Port) + "/" + c.options.Databse
+
+	// SSL Mode
+	if sslMode := c.options.SslMode; sslMode != "" {
+		connStr += fmt.Sprintf("?sslmode=%s", sslMode)
+	}
+
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		c.log.Error().Err(err).Msg("Unable to connect")
@@ -53,23 +64,34 @@ func (c client) Connect() error {
 	return nil
 }
 
-func (c client) Disconnect() error {
+func (c *client) Disconnect() error {
 	return nil
 }
 
-func (c client) Execute(query string) error {
+func (c *client) Execute(query string) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (c client) Migrate() error {
+func (c *client) Migrate() error {
+
+	s := bindata.Resource(migrations.AssetNames(),
+		func(name string) ([]byte, error) {
+			return migrations.Asset(name)
+		})
+	d, err := bindata.WithInstance(s)
+	if err != nil {
+		return fmt.Errorf("Could not create migrations reader: %v", err)
+	}
+
 	driver, err := postgresMigrate.WithInstance(c.db, &postgresMigrate.Config{})
 	if err != nil {
 		return err
 	}
-	m, err := migrate.NewWithDatabaseInstance(
-		"file:///migrations",
-		"postgres", driver)
+	m, err := migrate.NewWithInstance("go-binddata", d, "postgres", driver)
+	if err != nil {
+		return err
+	}
 	err = m.Up()
 	if err != nil {
 		return err
@@ -77,7 +99,7 @@ func (c client) Migrate() error {
 	return nil
 }
 
-func (c client) Select(query string) interface{} {
+func (c *client) Select(query string) interface{} {
 	//TODO implement me
 	panic("implement me")
 }

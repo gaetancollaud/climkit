@@ -1,5 +1,18 @@
 
 PLATFORM=local
+MIGRATIONDIR := pkg/postgres/migrations
+MIGRATIONS :=  $(wildcard ${MIGRATIONDIR}/*.sql)
+TOOLS := ${GOPATH}/bin/go-bindata
+
+# This is all the tools required to compile, test and handle protobufs
+tools: ${TOOLS}
+
+${GOPATH}/bin/go-bindata:
+	GO111MODULE=off go get -u github.com/go-bindata/go-bindata/...
+
+${MIGRATIONDIR}/bindata.go: ${MIGRATIONS}
+	# Building bindata
+	go-bindata -o ${MIGRATIONDIR}/bindata.go -prefix ${MIGRATIONDIR} -pkg migrations ${MIGRATIONDIR}/*.sql
 
 # Build all files.
 build:

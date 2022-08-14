@@ -6,6 +6,7 @@ type ClientOptions struct {
 	Databse  string
 	Username string
 	Password string
+	SslMode  string
 }
 
 func NewClientOptions() *ClientOptions {
@@ -15,6 +16,7 @@ func NewClientOptions() *ClientOptions {
 		Databse:  "postgres",
 		Username: "postgres",
 		Password: "postgres",
+		SslMode:  "disable",
 	}
 }
 
