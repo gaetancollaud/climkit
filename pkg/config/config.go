@@ -7,6 +7,13 @@ import (
 	"strings"
 )
 
+type Mode string
+
+const (
+	Mqtt     Mode = "mqtt"
+	Postgres      = "postgres"
+)
+
 type ConfigClimkit struct {
 	ApiUrl   string
 	Username string
@@ -19,36 +26,57 @@ type ConfigMqtt struct {
 	TopicPrefix string
 	Retain      bool
 }
+type ConfigPostgres struct {
+	Host     string
+	Port     int
+	Database string
+	Username string
+	Password string
+}
 type Config struct {
 	Climkit  ConfigClimkit
 	Mqtt     ConfigMqtt
+	Postgres ConfigPostgres
+	Mode     Mode
 	LogLevel string
 }
 
 const (
-	undefined             string = "__undefined__"
-	configFile            string = "config.yaml"
-	envKeyClimkitApiUrl   string = "climkit.api-url"
-	envKeyClimkitUsername string = "climkit.username"
-	envKeyClimkitPassword string = "climkit.password"
-	envKeyMqttUrl         string = "mqtt.url"
-	envKeyMqttUsername    string = "mqtt.username"
-	envKeyMqttPassword    string = "mqtt.password"
-	envKeyMqttTopicPrefix string = "mqtt.topic-prefix"
-	envKeyMqttRetain      string = "mqtt.retain"
-	envKeyLogLevel        string = "log.level"
+	undefined              string = "__undefined__"
+	configFile             string = "config.yaml"
+	envKeyMode             string = "mode"
+	envKeyLogLevel         string = "log.level"
+	envKeyClimkitApiUrl    string = "climkit.api-url"
+	envKeyClimkitUsername  string = "climkit.username"
+	envKeyClimkitPassword  string = "climkit.password"
+	envKeyMqttUrl          string = "mqtt.url"
+	envKeyMqttUsername     string = "mqtt.username"
+	envKeyMqttPassword     string = "mqtt.password"
+	envKeyMqttTopicPrefix  string = "mqtt.topic-prefix"
+	envKeyMqttRetain       string = "mqtt.retain"
+	envKeyPostgresHost     string = "postgres.host"
+	envKeyPostgresPort     string = "postgres.port"
+	envKeyPostgresDatabase string = "postgres.database"
+	envKeyPostgresUsername string = "postgres.username"
+	envKeyPostgresPassword string = "postgres.password"
 )
 
 var defaultConfig = map[string]interface{}{
-	envKeyClimkitApiUrl:   "https://api.climkit.io/api/",
-	envKeyClimkitUsername: undefined,
-	envKeyClimkitPassword: undefined,
-	envKeyMqttUrl:         undefined,
-	envKeyMqttUsername:    "",
-	envKeyMqttPassword:    "",
-	envKeyMqttTopicPrefix: "climkit",
-	envKeyMqttRetain:      false,
-	envKeyLogLevel:        "INFO",
+	envKeyMode:             undefined,
+	envKeyClimkitApiUrl:    "https://api.climkit.io/api/",
+	envKeyClimkitUsername:  undefined,
+	envKeyClimkitPassword:  undefined,
+	envKeyMqttUrl:          "",
+	envKeyMqttUsername:     "",
+	envKeyMqttPassword:     "",
+	envKeyMqttTopicPrefix:  "climkit",
+	envKeyMqttRetain:       false,
+	envKeyLogLevel:         "INFO",
+	envKeyPostgresHost:     "",
+	envKeyPostgresPort:     "",
+	envKeyPostgresDatabase: "",
+	envKeyPostgresUsername: "",
+	envKeyPostgresPassword: "",
 }
 
 // FromEnv returns a Config from env variables
@@ -95,6 +123,14 @@ func ReadConfig() (*Config, error) {
 			TopicPrefix: viper.GetString(envKeyMqttTopicPrefix),
 			Retain:      viper.GetBool(envKeyMqttRetain),
 		},
+		Postgres: ConfigPostgres{
+			Host:     viper.GetString(envKeyPostgresHost),
+			Port:     viper.GetInt(envKeyPostgresPort),
+			Database: viper.GetString(envKeyPostgresDatabase),
+			Username: viper.GetString(envKeyPostgresUsername),
+			Password: viper.GetString(envKeyPostgresPassword),
+		},
+		Mode:     Mode(viper.GetString(envKeyMode)),
 		LogLevel: viper.GetString(envKeyLogLevel),
 	}
 

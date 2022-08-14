@@ -6,12 +6,13 @@ import (
 	"github.com/gaetancollaud/climkit-to-mqtt/pkg/climkit"
 	"github.com/gaetancollaud/climkit-to-mqtt/pkg/config"
 	"github.com/gaetancollaud/climkit-to-mqtt/pkg/mqtt"
+	"github.com/gaetancollaud/climkit-to-mqtt/pkg/postgres"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"time"
 )
 
-type MeterModule struct {
+type MeterMqttModule struct {
 	log              zerolog.Logger
 	mqttClient       mqtt.Client
 	climkit          climkit.Client
@@ -19,19 +20,21 @@ type MeterModule struct {
 	installations    map[string]([]climkit.MeterInfo)
 }
 
-func NewMeterModule(mqttClient mqtt.Client, climkitClient climkit.Client, config *config.Config) Module {
-	logger := log.With().Str("Component", "MeterModule").Logger()
-	return &MeterModule{
+func NewMeterMqttModule(mqttClient mqtt.Client, _ postgres.Client, climkitClient climkit.Client, config *config.Config) Module {
+	logger := log.With().Str("Component", "MeterMqttModule").Logger()
+	return &MeterMqttModule{
 		mqttClient:    mqttClient,
 		climkit:       climkitClient,
 		log:           logger,
 		installations: make(map[string]([]climkit.MeterInfo)),
-		// TODO other init stuff
 	}
 }
 
-func (mm *MeterModule) Start() error {
+func (mm *MeterMqttModule) Eligible() bool {
+	return mm.mqttClient != nil
+}
 
+func (mm *MeterMqttModule) Start() error {
 	mm.fetchAndPublishInstallationInformation()
 	mm.fetchAndPublishMeterValue()
 
@@ -50,20 +53,19 @@ func (mm *MeterModule) Start() error {
 			}
 		}
 	}()
-
 	return nil
 }
 
-func (mm *MeterModule) Stop() error {
+func (mm *MeterMqttModule) Stop() error {
 	close(mm.timerQuitChannel)
 	return nil
 }
 
 func init() {
-	Register("meter", NewMeterModule)
+	Register("meter-mqtt", NewMeterMqttModule)
 }
 
-func (mm *MeterModule) fetchAndPublishInstallationInformation() {
+func (mm *MeterMqttModule) fetchAndPublishInstallationInformation() {
 	installationIds, err := mm.climkit.GetInstallationIds()
 	if err != nil {
 		mm.log.Error().Err(err).Msg("Unable to get installations liost")
@@ -93,7 +95,7 @@ func (mm *MeterModule) fetchAndPublishInstallationInformation() {
 	}
 }
 
-func (mm *MeterModule) fetchAndPublishMeterValue() {
+func (mm *MeterMqttModule) fetchAndPublishMeterValue() {
 	for installationId, meters := range mm.installations {
 		timeSeries, err := mm.climkit.GetMeterData(installationId, meters, climkit.Electricity, time.Now().Add(-time.Minute*30))
 		if err != nil {
@@ -107,7 +109,7 @@ func (mm *MeterModule) fetchAndPublishMeterValue() {
 	}
 }
 
-func (mm *MeterModule) publishInstallation(installationId string, installation climkit.InstallationInfo) {
+func (mm *MeterMqttModule) publishInstallation(installationId string, installation climkit.InstallationInfo) {
 	mm.mqttClient.PublishAndLogError("installation/"+installationId+"/name", installation.Name)
 	mm.mqttClient.PublishAndLogError("installation/"+installationId+"/site_ref", installation.SiteRef)
 	mm.mqttClient.PublishAndLogError("installation/"+installationId+"/timezone", installation.Timezone)
@@ -116,13 +118,13 @@ func (mm *MeterModule) publishInstallation(installationId string, installation c
 	mm.mqttClient.PublishAndLogError("installation/"+installationId+"/longitude", fmt.Sprintf("%f", installation.Longitude))
 }
 
-func (mm *MeterModule) publishMeterInfo(installationId string, meter climkit.MeterInfo) {
+func (mm *MeterMqttModule) publishMeterInfo(installationId string, meter climkit.MeterInfo) {
 	mm.mqttClient.PublishAndLogError("installation/"+installationId+"/meters/"+meter.Id+"/type", meter.Type)
 	mm.mqttClient.PublishAndLogError("installation/"+installationId+"/meters/"+meter.Id+"/prim_ad", fmt.Sprintf("%d", meter.PrimAd))
 	mm.mqttClient.PublishAndLogError("installation/"+installationId+"/meters/"+meter.Id+"/virtual", fmt.Sprintf("%d", meter.PrimAd))
 }
 
-func (mm *MeterModule) publishMetersLiveValue(installationId string, lastValues climkit.MeterData) {
+func (mm *MeterMqttModule) publishMetersLiveValue(installationId string, lastValues climkit.MeterData) {
 	timestamp := lastValues.Timestamp.Format(time.RFC3339)
 
 	mm.mqttClient.PublishAndLogError("installation/"+installationId+"/prod_total", fmt.Sprintf("%f", lastValues.ProdTotal*4))
