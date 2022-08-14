@@ -1,21 +1,15 @@
-CREATE TABLE api_token
-(
-    api_token_id VARCHAR PRIMARY KEY NOT NULL,
-    expire_at    TIMESTAMP           NOT NULL,
-    content      VARCHAR             NOT NULL
-);
-
-CREATE TABLE installations
+CREATE TABLE t_installations
 (
     installation_id VARCHAR PRIMARY KEY NOT NULL,
     site_ref        VARCHAR             NOT NULL,
     name            VARCHAR             NOT NULL,
     timezone        VARCHAR             NOT NULL,
+    creation_date   TIMESTAMP           NOT NULL,
     latitude        DOUBLE PRECISION,
     longitude       DOUBLE PRECISION
 );
 
-CREATE TABLE meters
+CREATE TABLE t_meters
 (
     meter_id        VARCHAR PRIMARY KEY NOT NULL,
     installation_id VARCHAR             NOT NULL,
@@ -24,10 +18,10 @@ CREATE TABLE meters
     virtual         BOOLEAN             NOT NULL,
     CONSTRAINT meters_installation_id
         FOREIGN KEY (installation_id)
-            REFERENCES installations (installation_id)
+            REFERENCES t_installations (installation_id)
 );
 
-CREATE TABLE installation_values
+CREATE TABLE t_installation_values
 (
     installation_id VARCHAR          NOT NULL,
     date_time       TIMESTAMP        NOT NULL,
@@ -37,10 +31,10 @@ CREATE TABLE installation_values
     PRIMARY KEY (installation_id, date_time),
     CONSTRAINT installation_values_installation_id
         FOREIGN KEY (installation_id)
-            REFERENCES installations (installation_id)
+            REFERENCES t_installations (installation_id)
 );
 
-CREATE TABLE meter_values
+CREATE TABLE t_meter_values
 (
     meter_id  VARCHAR          NOT NULL,
     date_time TIMESTAMP        NOT NULL,
@@ -50,5 +44,5 @@ CREATE TABLE meter_values
     PRIMARY KEY (meter_id, date_time),
     CONSTRAINT meter_values_meter_id
         FOREIGN KEY (meter_id)
-            REFERENCES meters (meter_id)
+            REFERENCES t_meters (meter_id)
 );

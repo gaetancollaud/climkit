@@ -1,5 +1,4 @@
-DROP TABLE api_token;
-DROP TABLE installations;
-DROP TABLE meters;
-DROP TABLE installation_values;
-DROP TABLE meter_values;
+DROP TABLE t_installations;
+DROP TABLE t_meters;
+DROP TABLE t_installation_values;
+DROP TABLE t_meter_values;

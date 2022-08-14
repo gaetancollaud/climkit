@@ -22,8 +22,8 @@ type Client interface {
 	Disconnect() error
 
 	Migrate() error
-	Execute(query string) error
-	Select(query string) interface{}
+	Execute(query string, args ...any) error
+	Select(query string, args ...any) *sql.Row
 }
 
 type client struct {
@@ -68,11 +68,6 @@ func (c *client) Disconnect() error {
 	return nil
 }
 
-func (c *client) Execute(query string) error {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (c *client) Migrate() error {
 	s := bindata.Resource(migrations.AssetNames(),
 		func(name string) ([]byte, error) {
@@ -91,15 +86,27 @@ func (c *client) Migrate() error {
 	if err != nil {
 		return err
 	}
-	m.Down()
 	err = m.Up()
 	if err != nil {
-		return err
+		if err == migrate.ErrNoChange {
+			c.log.Debug().Msg("Database already up to date")
+		} else {
+			return err
+		}
 	}
 	return nil
 }
 
-func (c *client) Select(query string) interface{} {
-	//TODO implement me
-	panic("implement me")
+func (c *client) Select(query string, args ...any) *sql.Row {
+	return c.db.QueryRow(query, args)
+}
+
+func (c *client) Execute(query string, args ...any) error {
+	exec, err := c.db.Exec(query, args...)
+	if err != nil {
+		return err
+	}
+	affected, _ := exec.RowsAffected()
+	c.log.Debug().Int64("affected", affected).Str("query", query).Msg("Query executed")
+	return nil
 }

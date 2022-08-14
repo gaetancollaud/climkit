@@ -35,6 +35,7 @@ func (mm *MeterPostgresModule) Eligible() bool {
 }
 
 func (mm *MeterPostgresModule) Start() error {
+	mm.fetchAndUpdateInstallationInformation()
 	//mm.fetchAndPublishInstallationInformation()
 	//mm.fetchAndPublishMeterValue()
 	//
@@ -65,7 +66,7 @@ func init() {
 	Register("meter-postgres", NewMeterPostgresModule)
 }
 
-func (mm *MeterPostgresModule) fetchAndPublishInstallationInformation() {
+func (mm *MeterPostgresModule) fetchAndUpdateInstallationInformation() {
 	installationIds, err := mm.climkit.GetInstallationIds()
 	if err != nil {
 		mm.log.Error().Err(err).Msg("Unable to get installations liost")
@@ -80,18 +81,18 @@ func (mm *MeterPostgresModule) fetchAndPublishInstallationInformation() {
 		}
 		infoStr, _ := json.Marshal(info)
 		mm.log.Info().RawJSON("info", infoStr).Msg("got installation info")
-		mm.publishInstallation(installationId, info)
+		mm.updateInstallation(installationId, info)
 
-		meters, err := mm.climkit.GetMetersInfos(installationIds[i])
-		metersStr, _ := json.Marshal(meters)
-		mm.log.Info().RawJSON("meters", metersStr).Msg("got installation meters")
-
-		for j := range meters {
-			meterInfo := meters[j]
-			mm.publishMeterInfo(installationId, meterInfo)
-		}
-
-		mm.installations[installationId] = meters
+		//meters, err := mm.climkit.GetMetersInfos(installationIds[i])
+		//metersStr, _ := json.Marshal(meters)
+		//mm.log.Info().RawJSON("meters", metersStr).Msg("got installation meters")
+		//
+		//for j := range meters {
+		//	meterInfo := meters[j]
+		//	mm.updateMeterInfo(installationId, meterInfo)
+		//}
+		//
+		//mm.installations[installationId] = meters
 	}
 }
 
@@ -105,11 +106,19 @@ func (mm *MeterPostgresModule) fetchAndPublishMeterValue() {
 		mm.log.Info().RawJSON("timeSeries", timeSeriesStr).Msg("got data")
 
 		last := timeSeries[len(timeSeries)-1]
-		mm.publishMetersLiveValue(installationId, last)
+		mm.updateMetersLiveValue(installationId, last)
 	}
 }
 
-func (mm *MeterPostgresModule) publishInstallation(installationId string, installation climkit.InstallationInfo) {
+func (mm *MeterPostgresModule) updateInstallation(installationId string, installation climkit.InstallationInfo) {
+	query := `INSERT INTO t_installations(installation_id, site_ref, name, timezone, creation_date, latitude, longitude)
+		VALUES($1, $2, $3, $4, $5, $6, $7)
+		ON CONFLICT (installation_id) DO UPDATE set site_ref=$2, name=$3, timezone=$4, creation_date=$5, latitude=$6, longitude=$7`
+
+	err := mm.postgresClient.Execute(query, installationId, installation.SiteRef, installation.Name, installation.Timezone, installation.CreationDate, installation.Latitude, installation.Longitude)
+	if err != nil {
+		mm.log.Fatal().Err(err).Msg("Unable to update installation")
+	}
 	//mm.mqttClient.PublishAndLogError("installation/"+installationId+"/name", installation.Name)
 	//mm.mqttClient.PublishAndLogError("installation/"+installationId+"/site_ref", installation.SiteRef)
 	//mm.mqttClient.PublishAndLogError("installation/"+installationId+"/timezone", installation.Timezone)
@@ -118,13 +127,13 @@ func (mm *MeterPostgresModule) publishInstallation(installationId string, instal
 	//mm.mqttClient.PublishAndLogError("installation/"+installationId+"/longitude", fmt.Sprintf("%f", installation.Longitude))
 }
 
-func (mm *MeterPostgresModule) publishMeterInfo(installationId string, meter climkit.MeterInfo) {
+func (mm *MeterPostgresModule) updateMeterInfo(installationId string, meter climkit.MeterInfo) {
 	//mm.mqttClient.PublishAndLogError("installation/"+installationId+"/meters/"+meter.Id+"/type", meter.Type)
 	//mm.mqttClient.PublishAndLogError("installation/"+installationId+"/meters/"+meter.Id+"/prim_ad", fmt.Sprintf("%d", meter.PrimAd))
 	//mm.mqttClient.PublishAndLogError("installation/"+installationId+"/meters/"+meter.Id+"/virtual", fmt.Sprintf("%d", meter.PrimAd))
 }
 
-func (mm *MeterPostgresModule) publishMetersLiveValue(installationId string, lastValues climkit.MeterData) {
+func (mm *MeterPostgresModule) updateMetersLiveValue(installationId string, lastValues climkit.MeterData) {
 	//timestamp := lastValues.Timestamp.Format(time.RFC3339)
 
 	//mm.mqttClient.PublishAndLogError("installation/"+installationId+"/prod_total", fmt.Sprintf("%f", lastValues.ProdTotal*4))
