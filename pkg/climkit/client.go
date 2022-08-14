@@ -175,13 +175,9 @@ func parse64AndLogError(input interface{}) float64 {
 }
 
 func parseTimeAndLogError(input interface{}) time.Time {
-	// TODO returned result is wrong, it's supposed to be iso but we receive a shitty timezone
 	str := input.(string)
-	tzIndex := strings.Index(str, "+")
-	if tzIndex != -1 {
-		str = str[:tzIndex]
-	}
-	parsed, err := time.Parse(ClimkitTimeFormat, str)
+	str = strings.Replace(str, " ", "T", 1) // fix timestamp format to ISO8601
+	parsed, err := time.Parse(time.RFC3339, str)
 	if err != nil {
 		log.Err(err).Str("str", str).Msg("Unable to parse time")
 	}

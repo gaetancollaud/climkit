@@ -68,7 +68,7 @@ func init() {
 func (mm *MeterMqttModule) fetchAndPublishInstallationInformation() {
 	installationIds, err := mm.climkit.GetInstallationIds()
 	if err != nil {
-		mm.log.Error().Err(err).Msg("Unable to get installations liost")
+		mm.log.Error().Err(err).Msg("Unable to get installations list")
 	}
 	mm.log.Info().Strs("installationIds", installationIds).Msg("installation retrieved")
 
@@ -97,7 +97,7 @@ func (mm *MeterMqttModule) fetchAndPublishInstallationInformation() {
 
 func (mm *MeterMqttModule) fetchAndPublishMeterValue() {
 	for installationId, meters := range mm.installations {
-		timeSeries, err := mm.climkit.GetMeterData(installationId, meters, climkit.Electricity, time.Now().Add(-time.Minute*30), time.Now())
+		timeSeries, err := mm.climkit.GetMeterData(installationId, meters, climkit.Electricity, time.Now().Add(-time.Minute*30), time.Now().Add(time.Hour*24))
 		if err != nil {
 			mm.log.Error().Err(err).Msg("Unable to get metric data")
 		}

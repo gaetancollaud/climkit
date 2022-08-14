@@ -38,23 +38,22 @@ func (mm *MeterPostgresModule) Eligible() bool {
 func (mm *MeterPostgresModule) Start() error {
 	mm.fetchAndUpdateInstallationInformation()
 	mm.fetchAndUpdateInstallationHistory()
-	//mm.fetchAndPublishMeterValue()
-	//
-	//ticker := time.NewTicker(15 * time.Minute)
-	//mm.timerQuitChannel = make(chan struct{})
-	//
-	//go func() {
-	//	for {
-	//		select {
-	//		case <-ticker.C:
-	//			mm.fetchAndPublishMeterValue()
-	//		case <-mm.timerQuitChannel:
-	//			mm.log.Info().Msg("Stopping interval requests")
-	//			ticker.Stop()
-	//			return
-	//		}
-	//	}
-	//}()
+
+	ticker := time.NewTicker(15 * time.Minute)
+	mm.timerQuitChannel = make(chan struct{})
+
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				mm.fetchAndUpdateInstallationHistory()
+			case <-mm.timerQuitChannel:
+				mm.log.Info().Msg("Stopping interval requests")
+				ticker.Stop()
+				return
+			}
+		}
+	}()
 	return nil
 }
 
@@ -99,7 +98,6 @@ func (mm *MeterPostgresModule) fetchAndUpdateInstallationInformation() {
 func (mm *MeterPostgresModule) fetchAndUpdateInstallationHistory() {
 	now := time.Now()
 	interval := time.Hour * 24 * 30 // 1 month
-	//interval := time.Hour * 24 * 1 // 1 day
 	for installationId, meters := range mm.installations {
 		startTime := mm.getLastHistoryTime(installationId)
 		for startTime.Before(now) {
@@ -151,31 +149,17 @@ func (mm *MeterPostgresModule) getLastHistoryTime(installationId string) time.Ti
 			mm.log.Error().Err(err).Str("installationId", installationId).Msg("Unable to get last installation values")
 		}
 
-		lastTime, _ = time.Parse(time.RFC3339, "2022-08-14T00:00:00Z")
+		//lastTime, _ = time.Parse(time.RFC3339, "2022-08-14T00:00:00Z")
 
-		//row = mm.postgresClient.Select(`SELECT creation_date FROM t_installations WHERE installation_id=$1 LIMIT 1 `, installationId)
-		//err = row.Scan(&lastTime)
-		//if err != nil {
-		//	mm.log.Error().Err(err).Str("installationId", installationId).Msg("Unable to get installation creation date")
-		//}
+		row = mm.postgresClient.Select(`SELECT creation_date FROM t_installations WHERE installation_id=$1 LIMIT 1 `, installationId)
+		err = row.Scan(&lastTime)
+		if err != nil {
+			mm.log.Error().Err(err).Str("installationId", installationId).Msg("Unable to get installation creation date")
+		}
 	}
 
 	return lastTime
 }
-
-//func (mm *MeterPostgresModule) fetchAndPublishMeterValue() {
-//	for installationId, meters := range mm.installations {
-//		timeSeries, err := mm.climkit.GetMeterData(installationId, meters, climkit.Electricity, time.Now().Add(-time.Minute*30))
-//		if err != nil {
-//			mm.log.Error().Err(err).Msg("Unable to get metric data")
-//		}
-//		timeSeriesStr, _ := json.Marshal(timeSeries)
-//		mm.log.Info().RawJSON("timeSeries", timeSeriesStr).Msg("got data")
-//
-//		last := timeSeries[len(timeSeries)-1]
-//		mm.updateMetersLiveValue(installationId, last)
-//	}
-//}
 
 func (mm *MeterPostgresModule) updateInstallation(installationId string, installation climkit.InstallationInfo) {
 	query := `INSERT INTO t_installations(installation_id, site_ref, name, timezone, creation_date, latitude, longitude)
@@ -197,22 +181,4 @@ func (mm *MeterPostgresModule) updateMeterInfo(installationId string, meter clim
 	if err != nil {
 		mm.log.Fatal().Err(err).Str("installationId", installationId).Str("MeterId", meter.Id).Msg("Unable to update meter")
 	}
-}
-
-func (mm *MeterPostgresModule) updateMetersLiveValue(installationId string, lastValues climkit.MeterData) {
-	//timestamp := lastValues.Timestamp.Format(time.RFC3339)
-
-	//mm.mqttClient.PublishAndLogError("installation/"+installationId+"/prod_total", fmt.Sprintf("%f", lastValues.ProdTotal*4))
-	//mm.mqttClient.PublishAndLogError("installation/"+installationId+"/self", fmt.Sprintf("%f", lastValues.Self*4))
-	//mm.mqttClient.PublishAndLogError("installation/"+installationId+"/to_ext", fmt.Sprintf("%f", lastValues.ToExt*4))
-	//mm.mqttClient.PublishAndLogError("installation/"+installationId+"/timestamp", timestamp)
-	//
-	//for i := range lastValues.Meters {
-	//	meterValue := lastValues.Meters[i]
-	//
-	//	mm.mqttClient.PublishAndLogError("installation/"+installationId+"/meters/"+meterValue.MeterId+"/ext", fmt.Sprintf("%f", meterValue.Ext*4))
-	//	mm.mqttClient.PublishAndLogError("installation/"+installationId+"/meters/"+meterValue.MeterId+"/self", fmt.Sprintf("%f", meterValue.Self*4))
-	//	mm.mqttClient.PublishAndLogError("installation/"+installationId+"/meters/"+meterValue.MeterId+"/total", fmt.Sprintf("%f", meterValue.Total*4))
-	//	mm.mqttClient.PublishAndLogError("installation/"+installationId+"/meters/"+meterValue.MeterId+"/timestamp", timestamp)
-	//}
 }
