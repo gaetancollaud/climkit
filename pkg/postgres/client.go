@@ -98,7 +98,7 @@ func (c *client) Migrate() error {
 }
 
 func (c *client) Select(query string, args ...any) *sql.Row {
-	return c.db.QueryRow(query, args)
+	return c.db.QueryRow(query, args...)
 }
 
 func (c *client) Execute(query string, args ...any) error {

@@ -17,6 +17,8 @@
 *.private.env.json
 .idea/
 
+docs/private/*
+
 config.yaml
 .env
 

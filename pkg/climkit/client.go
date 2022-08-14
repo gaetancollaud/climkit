@@ -74,6 +74,7 @@ const (
 type TimeSeriesRequest struct {
 	// Should be ISO8601 but without timezone !
 	StartTime string `json:"t_s"`
+	EndTime   string `json:"t_e"`
 }
 
 func NewClient(options *ClientOptions) Client {
@@ -107,15 +108,18 @@ func (c *Client) GetMetersInfos(installationId string) ([]MeterInfo, error) {
 	return obj, err
 }
 
-func (c *Client) GetMeterData(installationId string, meters []MeterInfo, meterType MeterType, startTime time.Time) ([]MeterData, error) {
+func (c *Client) GetMeterData(installationId string, meters []MeterInfo, meterType MeterType, startTime time.Time, endTime time.Time) ([]MeterData, error) {
 	var obj []interface{}
 
 	// implicit UTC
-	formattedTime := startTime.UTC().Format(ClimkitTimeFormat)
+	formattedStartTime := startTime.UTC().Format(ClimkitTimeFormat)
+	formattedEndTime := endTime.UTC().Format(ClimkitTimeFormat)
 
 	request := TimeSeriesRequest{
-		StartTime: formattedTime,
+		StartTime: formattedStartTime,
+		EndTime:   formattedEndTime,
 	}
+
 	err := c.getHistory("meters data", "v1/site_data/"+installationId+"/"+string(meterType), request, &obj)
 
 	var meterDataArray []MeterData

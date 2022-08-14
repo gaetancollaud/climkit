@@ -38,7 +38,8 @@ Accept: application/json
 Authorization: Bearer {{token}}
 
 {
-  "t_s": "2022-07-18 20:00:00"
+  "t_s": "2022-08-14 14:00:00",
+  "t_e": "2022-08-14 18:00:00"
 }
 
 ### meter value (for one meter)

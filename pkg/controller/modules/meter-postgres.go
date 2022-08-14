@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"database/sql"
 	"encoding/json"
 	"github.com/gaetancollaud/climkit-to-mqtt/pkg/climkit"
 	"github.com/gaetancollaud/climkit-to-mqtt/pkg/config"
@@ -36,7 +37,7 @@ func (mm *MeterPostgresModule) Eligible() bool {
 
 func (mm *MeterPostgresModule) Start() error {
 	mm.fetchAndUpdateInstallationInformation()
-	//mm.fetchAndPublishInstallationInformation()
+	mm.fetchAndUpdateInstallationHistory()
 	//mm.fetchAndPublishMeterValue()
 	//
 	//ticker := time.NewTicker(15 * time.Minute)
@@ -95,20 +96,86 @@ func (mm *MeterPostgresModule) fetchAndUpdateInstallationInformation() {
 		mm.installations[installationId] = meters
 	}
 }
-
-func (mm *MeterPostgresModule) fetchAndPublishMeterValue() {
+func (mm *MeterPostgresModule) fetchAndUpdateInstallationHistory() {
+	now := time.Now()
+	interval := time.Hour * 24 * 30 // 1 month
+	//interval := time.Hour * 24 * 1 // 1 day
 	for installationId, meters := range mm.installations {
-		timeSeries, err := mm.climkit.GetMeterData(installationId, meters, climkit.Electricity, time.Now().Add(-time.Minute*30))
-		if err != nil {
-			mm.log.Error().Err(err).Msg("Unable to get metric data")
-		}
-		timeSeriesStr, _ := json.Marshal(timeSeries)
-		mm.log.Info().RawJSON("timeSeries", timeSeriesStr).Msg("got data")
+		startTime := mm.getLastHistoryTime(installationId)
+		for startTime.Before(now) {
+			endTime := startTime.Add(interval)
+			mm.log.Info().Str("installation", installationId).Time("startTime", startTime).Time("endTime", endTime).Msg("Getting history")
 
-		last := timeSeries[len(timeSeries)-1]
-		mm.updateMetersLiveValue(installationId, last)
+			// TODO multiple call for multiple type
+			data, err := mm.climkit.GetMeterData(installationId, meters, climkit.Electricity, startTime, endTime)
+			if err != nil {
+				log.Fatal().Str("installation", installationId).Time("startTime", startTime).Err(err).Msg("Unable to get data")
+			}
+			for _, instalData := range data {
+				timestamp := instalData.Timestamp
+
+				query := `INSERT INTO t_installation_values (installation_id, date_time, prod_total, self, to_ext)
+							  VALUES ($1, $2, $3, $4, $5)
+							  ON CONFLICT (installation_id, date_time)
+							  DO UPDATE SET prod_total=$3, self=$4, to_ext=$5`
+				err := mm.postgresClient.Execute(query,
+					installationId, timestamp, instalData.ProdTotal, instalData.Self, instalData.ToExt)
+				if err != nil {
+					mm.log.Error().Str("installation", installationId).Time("Timestamp", timestamp).Err(err).Msg("Unable to insert meter data")
+				}
+
+				for _, meterData := range instalData.Meters {
+					query := `INSERT INTO t_meter_values (meter_id, date_time, total, self, ext)
+							  VALUES ($1, $2, $3, $4, $5)
+							  ON CONFLICT (meter_id, date_time)
+							  DO UPDATE SET total=$3, self=$4, ext=$5`
+					err := mm.postgresClient.Execute(query,
+						meterData.MeterId, timestamp, meterData.Total, meterData.Self, meterData.Ext)
+					if err != nil {
+						mm.log.Error().Str("installation", installationId).Time("Timestamp", timestamp).Err(err).Msg("Unable to insert meter data")
+					}
+				}
+			}
+
+			startTime = endTime
+		}
 	}
 }
+
+func (mm *MeterPostgresModule) getLastHistoryTime(installationId string) time.Time {
+	row := mm.postgresClient.Select(`SELECT date_time FROM t_installation_values WHERE installation_id=$1 ORDER BY date_time DESC LIMIT 1 `, installationId)
+	var lastTime time.Time
+	err := row.Scan(&lastTime)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			mm.log.Error().Err(err).Str("installationId", installationId).Msg("Unable to get last installation values")
+		}
+
+		lastTime, _ = time.Parse(time.RFC3339, "2022-08-14T00:00:00Z")
+
+		//row = mm.postgresClient.Select(`SELECT creation_date FROM t_installations WHERE installation_id=$1 LIMIT 1 `, installationId)
+		//err = row.Scan(&lastTime)
+		//if err != nil {
+		//	mm.log.Error().Err(err).Str("installationId", installationId).Msg("Unable to get installation creation date")
+		//}
+	}
+
+	return lastTime
+}
+
+//func (mm *MeterPostgresModule) fetchAndPublishMeterValue() {
+//	for installationId, meters := range mm.installations {
+//		timeSeries, err := mm.climkit.GetMeterData(installationId, meters, climkit.Electricity, time.Now().Add(-time.Minute*30))
+//		if err != nil {
+//			mm.log.Error().Err(err).Msg("Unable to get metric data")
+//		}
+//		timeSeriesStr, _ := json.Marshal(timeSeries)
+//		mm.log.Info().RawJSON("timeSeries", timeSeriesStr).Msg("got data")
+//
+//		last := timeSeries[len(timeSeries)-1]
+//		mm.updateMetersLiveValue(installationId, last)
+//	}
+//}
 
 func (mm *MeterPostgresModule) updateInstallation(installationId string, installation climkit.InstallationInfo) {
 	query := `INSERT INTO t_installations(installation_id, site_ref, name, timezone, creation_date, latitude, longitude)
