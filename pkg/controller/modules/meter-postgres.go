@@ -135,6 +135,9 @@ func (mm *MeterPostgresModule) fetchAndUpdateInstallationHistory() {
 				}
 			}
 
+			// sleep to avoid "too many requests"
+			time.Sleep(2 * time.Second)
+
 			startTime = endTime
 		}
 	}

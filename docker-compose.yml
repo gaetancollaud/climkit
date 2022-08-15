@@ -1,10 +1,15 @@
 version: '3.0'
 services:
-  climkit-to-mqtt:
+  climkit:
     image: gaetancollaud/climkit-to-mqtt:dev
     build: .
     environment:
+      - MODE=postgres
       - MQTT_URL=tcp://mosquitto:1883
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DATABASE=postgres
+      - POSTGRES_USERNAME=postgres
+      - POSTGRES_PASSWORD=postgres
     env_file:
       - .env
 
