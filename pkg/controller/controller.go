@@ -2,11 +2,11 @@ package controller
 
 import (
 	"fmt"
-	"github.com/gaetancollaud/climkit-to-mqtt/pkg/climkit"
-	"github.com/gaetancollaud/climkit-to-mqtt/pkg/config"
-	"github.com/gaetancollaud/climkit-to-mqtt/pkg/controller/modules"
-	"github.com/gaetancollaud/climkit-to-mqtt/pkg/mqtt"
-	"github.com/gaetancollaud/climkit-to-mqtt/pkg/postgres"
+	"github.com/gaetancollaud/climkit/pkg/climkit"
+	"github.com/gaetancollaud/climkit/pkg/config"
+	"github.com/gaetancollaud/climkit/pkg/controller/modules"
+	"github.com/gaetancollaud/climkit/pkg/mqtt"
+	"github.com/gaetancollaud/climkit/pkg/postgres"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )

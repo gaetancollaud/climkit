@@ -1,4 +1,4 @@
-module github.com/gaetancollaud/climkit-to-mqtt
+module github.com/gaetancollaud/climkit
 
 go 1.18
 

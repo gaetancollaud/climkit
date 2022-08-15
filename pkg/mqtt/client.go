@@ -48,7 +48,7 @@ func NewClient(options *ClientOptions) Client {
 	logger := log.With().Str("Component", "MQTT").Logger()
 	mqttOptions := mqtt.NewClientOptions().
 		AddBroker(options.MqttUrl).
-		SetClientID("climkit-to-mqtt-" + uuid.New().String()).
+		SetClientID("climkit-" + uuid.New().String()).
 		SetOrderMatters(false).
 		SetUsername(options.Username).
 		SetPassword(options.Password)

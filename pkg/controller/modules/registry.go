@@ -1,10 +1,10 @@
 package modules
 
 import (
-	"github.com/gaetancollaud/climkit-to-mqtt/pkg/climkit"
-	"github.com/gaetancollaud/climkit-to-mqtt/pkg/config"
-	"github.com/gaetancollaud/climkit-to-mqtt/pkg/mqtt"
-	"github.com/gaetancollaud/climkit-to-mqtt/pkg/postgres"
+	"github.com/gaetancollaud/climkit/pkg/climkit"
+	"github.com/gaetancollaud/climkit/pkg/config"
+	"github.com/gaetancollaud/climkit/pkg/mqtt"
+	"github.com/gaetancollaud/climkit/pkg/postgres"
 )
 
 // Interface for the different modules being

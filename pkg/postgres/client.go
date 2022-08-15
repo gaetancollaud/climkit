@@ -3,7 +3,7 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
-	"github.com/gaetancollaud/climkit-to-mqtt/pkg/postgres/migrations"
+	"github.com/gaetancollaud/climkit/pkg/postgres/migrations"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	postgresMigrate "github.com/golang-migrate/migrate/v4/database/postgres"

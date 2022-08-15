@@ -10,12 +10,12 @@ TOOLS := ${GOPATH}/bin/go-bindata
 # Build all files.
 build: ${MIGRATIONDIR}/bindata.go
 	@echo "==> Building ./dist/sdm"
-	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/climkit-to-mqtt-amd64 ./main.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/climkit-amd64 ./main.go
 .PHONY: build
 
 build-arm:
 	@echo "==> Building ./dist/sdm"
-	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=5 go build -o dist/climkit-to-mqtt-arm ./main.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=5 go build -o dist/climkit-arm ./main.go
 .PHONY: build
 
 
@@ -28,7 +28,7 @@ ${MIGRATIONDIR}/bindata.go: ${MIGRATIONS}
 
 # Install from source.
 install:
-	@echo "==> Installing climkit-to-mqtt ${GOPATH}/bin/climkit-to-mqtt"
+	@echo "==> Installing climkit ${GOPATH}/bin/climkit"
 	go install ./...
 .PHONY: install
 

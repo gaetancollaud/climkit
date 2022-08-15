@@ -1,7 +1,7 @@
 version: '3.0'
 services:
   climkit:
-    image: gaetancollaud/climkit-to-mqtt:dev
+    image: gaetancollaud/climkit
     build: .
     environment:
       - MODE=postgres

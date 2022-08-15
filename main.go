@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/gaetancollaud/climkit-to-mqtt/pkg/config"
-	"github.com/gaetancollaud/climkit-to-mqtt/pkg/controller"
+	"github.com/gaetancollaud/climkit/pkg/config"
+	"github.com/gaetancollaud/climkit/pkg/controller"
 	"os"
 	"os/signal"
 	"syscall"
