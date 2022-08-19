@@ -45,8 +45,8 @@ func NewInterceptor(logger zerolog.Logger, options *ClientOptions) *Interceptor 
 }
 
 func (i *Interceptor) refreshTokenIfNecessary() (string, error) {
-	if time.Now().Add(-10 * time.Second).After(i.validUntil) {
-		i.log.Info().Msg("Token is expired, renewing")
+	if time.Now().Add(10 * time.Second).After(i.validUntil) {
+		i.log.Debug().Msg("Token is expired, renewing")
 
 		requestBody := AuthRequest{
 			Username: i.options.Username,
@@ -69,7 +69,7 @@ func (i *Interceptor) refreshTokenIfNecessary() (string, error) {
 		i.accessToken = jsonResponse.AccessToken
 		i.validUntil = time.UnixMilli(jsonResponse.ValidUntil.Date)
 
-		i.log.Debug().Str("access_token", i.accessToken).Time("valid_until", i.validUntil).Msg("Token received")
+		i.log.Info().Str("access_token", i.accessToken).Time("valid_until", i.validUntil).Msg("Token received")
 	}
 	return i.accessToken, nil
 }
